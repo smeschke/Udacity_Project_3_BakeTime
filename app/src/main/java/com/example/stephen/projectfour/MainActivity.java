@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+        delete_all();
 
         // Get access to the preferences
         SharedPreferences settings = getApplicationContext().
@@ -302,5 +304,16 @@ public class MainActivity extends AppCompatActivity implements
         }
         return outputList;
     }
+
+    // Delete the movies that are going to be updated
+    public void delete_all() {
+        // Build uri with the movie json that needs to be deleted
+        Uri uri = Contract.listEntry.CONTENT_URI;
+        uri = uri.buildUpon().appendPath("1").build();
+        // This goes to the top part of the 'delete' method in the Provider class,
+        // because the paths is len <3.
+        getContentResolver().delete(uri, null, null);
+    }
+
 }
 

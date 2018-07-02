@@ -1,7 +1,10 @@
 package com.example.stephen.projectfour;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
@@ -12,10 +15,23 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.stephen.projectfour.dummy.DummyContent;
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +78,15 @@ public class ItemListActivity extends AppCompatActivity {
         View recyclerView = findViewById(R.id.item_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
+
+        /*// recipe ingredients widget
+        String ingredients = mOutputList.get(1);
+        Context context = this;
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.recipe_widget);
+        ComponentName thisWidget = new ComponentName(context, recipe_widget.class);
+        remoteViews.setTextViewText(R.id.appwidget_text, ingredients);
+        appWidgetManager.updateAppWidget(thisWidget, remoteViews);*/
     }
 
     @Override
@@ -94,10 +119,12 @@ public class ItemListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 DummyContent.DummyItem item = (DummyContent.DummyItem) view.getTag();
+                int index = Integer.parseInt(item.id);
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
-                    //arguments.putString(ItemDetailFragment.ARG_ITEM_ID, item.id);
-                    arguments.putString(ItemDetailFragment.ARG_ITEM, mOutputList.get(Integer.parseInt(item.id)-1));
+                    arguments.putInt(ItemDetailFragment.ARG_INDEX, index);
+                    arguments.putString(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
+                    arguments.putString(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
                     ItemDetailFragment fragment = new ItemDetailFragment();
                     fragment.setArguments(arguments);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -106,7 +133,9 @@ public class ItemListActivity extends AppCompatActivity {
                 } else {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, ItemDetailActivity.class);
-                    intent.putExtra(ItemDetailFragment.ARG_ITEM, item.id);
+                    intent.putExtra(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
+                    intent.putExtra(ItemDetailFragment.ARG_INDEX, index);
+                    intent.putExtra(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
                     context.startActivity(intent);
                 }
             }
@@ -162,4 +191,5 @@ public class ItemListActivity extends AppCompatActivity {
         String[] output = input_string.split(delimiter);
         return output;
     }
+
 }

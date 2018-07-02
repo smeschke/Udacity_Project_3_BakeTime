@@ -21,6 +21,7 @@ public class Provider extends ContentProvider {
 
     // Initialize mTaskDbHelper and context in onCreate
     private DbHelper mTaskDbHelper;
+
     @Override
     public boolean onCreate() {
         Context context = getContext();
@@ -72,7 +73,18 @@ public class Provider extends ContentProvider {
     // Not used
     @Override
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
-        throw new UnsupportedOperationException("Not implemented");
+        // # of tasks deleted
+        int moviesDeleted = 0;
+        // Access db
+        final SQLiteDatabase db = mTaskDbHelper.getWritableDatabase();
+        // Get movie_json
+        String movie_id = uri.getPathSegments().get(1);
+        moviesDeleted = db.delete(TABLE_NAME,
+                null,
+                null);
+        // Return the number of tasks deleted
+        getContext().getContentResolver().notifyChange(uri, null);
+        return moviesDeleted;
     }
 
     // Not used
