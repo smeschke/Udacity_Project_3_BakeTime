@@ -1,5 +1,6 @@
 package com.example.stephen.projectfour;
 
+import android.content.ClipData;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -39,11 +40,16 @@ public class ItemDetailActivity extends AppCompatActivity {
             // using a fragment transaction.
             int index = getIntent().getExtras().getInt(ItemDetailFragment.ARG_INDEX);
             String arg_string = getIntent().getExtras().getString(ItemDetailFragment.ARG_ITEM);
-            Log.d("LOG", "asdf "+arg_string);
+            String recipe_name = getIntent().getExtras().getString(ItemDetailFragment.ARG_RECIPE_NAME);
+            String ingredients = getIntent().getExtras().getString(ItemDetailFragment.ARG_INGREDIENTS);
+
+            Log.d("LOG", "asdf itemDetailActivity recipe title: "+recipe_name);
 
             Bundle arguments = new Bundle();
             arguments.putInt(ItemDetailFragment.ARG_INDEX, index);
             arguments.putString(ItemDetailFragment.ARG_ITEM, arg_string);
+            arguments.putString(ItemDetailFragment.ARG_INGREDIENTS, ingredients);
+            arguments.putString(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name);
             ItemDetailFragment fragment = new ItemDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

@@ -78,15 +78,6 @@ public class ItemListActivity extends AppCompatActivity {
         View recyclerView = findViewById(R.id.item_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
-
-        /*// recipe ingredients widget
-        String ingredients = mOutputList.get(1);
-        Context context = this;
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.recipe_widget);
-        ComponentName thisWidget = new ComponentName(context, recipe_widget.class);
-        remoteViews.setTextViewText(R.id.appwidget_text, ingredients);
-        appWidgetManager.updateAppWidget(thisWidget, remoteViews);*/
     }
 
     @Override
@@ -120,11 +111,13 @@ public class ItemListActivity extends AppCompatActivity {
             public void onClick(View view) {
                 DummyContent.DummyItem item = (DummyContent.DummyItem) view.getTag();
                 int index = Integer.parseInt(item.id);
+                String recipe_name = mOutputList.get(0).split("42069")[0];
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
                     arguments.putInt(ItemDetailFragment.ARG_INDEX, index);
                     arguments.putString(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
                     arguments.putString(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
+                    arguments.putString(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name);
                     ItemDetailFragment fragment = new ItemDetailFragment();
                     fragment.setArguments(arguments);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -136,6 +129,7 @@ public class ItemListActivity extends AppCompatActivity {
                     intent.putExtra(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
                     intent.putExtra(ItemDetailFragment.ARG_INDEX, index);
                     intent.putExtra(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
+                    intent.putExtra(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name);
                     context.startActivity(intent);
                 }
             }

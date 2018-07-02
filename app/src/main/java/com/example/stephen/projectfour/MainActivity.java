@@ -1,13 +1,22 @@
 package com.example.stephen.projectfour;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -20,8 +29,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<Cursor>,
         mCardAdapter.mAdapterOnClickHandler {
 
     public mCardAdapter mAdapter;
@@ -29,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements
     public final String LOG_KEY = "log";
     public final String DB_HAS_BEEN_QUERIED_KEY = "dbQueryKey";
     public final int SETTINGS_MODE = 0;
+    public final int LOADER_ID = 42;
+    public Cursor mCursor;
+    private RecyclerView.LayoutManager mLayoutManager;
 
 
     @Override
@@ -36,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d("LOG", "asdf Onc Create");
+        Log.d("LOG", "asdf OnCreate");
 
         URL url = null;
         try {
@@ -44,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        delete_all();
 
         // Get access to the preferences
         SharedPreferences settings = getApplicationContext().
@@ -54,19 +67,68 @@ public class MainActivity extends AppCompatActivity implements
         boolean dbHasBeenQueried = settings.getBoolean(DB_HAS_BEEN_QUERIED_KEY, false);
 
         // If connected, query the DB (only do this once)
-        //if (!dbHasBeenQueried) {
-        Log.d("LOG", "asdf On Create DB Load");
-        editor.putBoolean(DB_HAS_BEEN_QUERIED_KEY, true).commit();
-        new fetch().execute(url);
-        //}
+        if (!dbHasBeenQueried && is_connected()) {
+            Log.d("LOG", "asdf connection and no db query, time for a new fetch task");
+            editor.putBoolean(DB_HAS_BEEN_QUERIED_KEY, true).commit();
+            delete_all(); // Clear the db
+            new fetch().execute(url);
+        }
+        // If there is no connection, tell the user to connect
+        if (!is_connected()) {
+            Toast.makeText(this, "no connectyivitiy", Toast.LENGTH_LONG).show();
+        }
 
-        //code for recycler view
-        mList = (RecyclerView) findViewById(R.id.my_recycler_view);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this,
-                LinearLayoutManager.VERTICAL, false);
-        mList.setLayoutManager(layoutManager);
-        mList.setHasFixedSize(true);
+        // code for recycler view
+        mList = findViewById(R.id.my_recycler_view);
+        //mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mLayoutManager = new GridLayoutManager(this, 2);
+        mList.setLayoutManager(mLayoutManager);
+        mAdapter = new mCardAdapter(MainActivity.this, MainActivity.this);
+        mList.setAdapter(mAdapter);
+        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+        Log.d("LOG", "asdf about to getSupportLoaderManager");
+
     }
+
+    // Is there an internet connection?
+    public boolean is_connected() {
+        //https://stackoverflow.com/questions/5474089/how-to-check-currently-internet-connection-is-available-or-not-in-android
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (Objects.requireNonNull(connectivityManager).getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    ///////////////////////////////////START CURSOR LOADER METHODS /////////////////////////////////
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        Log.d("LOG", "asdf loader onCreateLoader123467128934");
+        return new CursorLoader(this,
+                Contract.listEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                Contract.listEntry.COLUMN_TIMESTAMP);
+    }
+    // When loading is finished, swap in the new data
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+        Log.d("LOG", "asdf onLoadFinished");
+        mCursor = data;
+        mAdapter.swapCursor(data);
+        Log.d("LOG", "asdf cursor get Count (should be 81): " + Integer.toString(mCursor.getCount()));
+    }
+    // I don't think the loader ever gets reset.
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
+    }
+    /////////////////////////////////// END CURSOR LOADER METHODS //////////////////////////////////
 
     //on user clicks, send to training
     @Override
@@ -75,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements
         Intent toDetail = new Intent(this, ItemListActivity.class);
         // Add an output String Array list extra that has all the recipes information
         // This keeps all the DB calls on in the MainActivity
-        toDetail.putStringArrayListExtra("output", getOutputString(Integer.toString(index+1)));
+        toDetail.putStringArrayListExtra("output", getOutputString(Integer.toString(index + 1)));
         startActivity(toDetail);
     }
 
@@ -86,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements
         // Do in background gets the json recipe data from internet
         @Override
         protected String doInBackground(URL... urls) {
+            Log.d("LOG", "asdf doInBackground of AsyncFetchTask");
             String fetchResults = null;
             try {
                 fetchResults = NetworkUtils.getResponseFromHttpUrl(urls[0]);
@@ -93,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
             // Return the results to the onPostExecute method
+            //Log.d("LOG", "asdf " + fetchResults);
             return fetchResults;
         }
 
@@ -101,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements
         protected void onPostExecute(String recipes) {
             // parse out the json
             // Iterate through each recipe and add it to the DB
+            Log.d("LOG", "asdf onPostExecute of async task");
             ArrayList<String> recipeNames = new ArrayList<>();
             ArrayList<String> recipeServings = new ArrayList<>();
             for (int idx = 0; idx < 4; idx++) {
@@ -118,9 +183,8 @@ public class MainActivity extends AppCompatActivity implements
 
                 recipeNames.add(attributes.get(0));
                 recipeServings.add("Servings: " + attributes.get(2));
+                Log.d("LOG", "asdf onPostExecute recipe names" + attributes.get(0));
             }
-            mAdapter = new mCardAdapter(MainActivity.this, MainActivity.this, recipeNames, recipeServings);
-            mList.setAdapter(mAdapter);
         }
     }
 
@@ -224,7 +288,6 @@ public class MainActivity extends AppCompatActivity implements
             // Insert the content values via a ContentResolver
             // Is the a database operation on the main thread? Sorry Layla.
             getContentResolver().insert(Contract.listEntry.CONTENT_URI, cv);
-            // Tell the user a movie has been saved as favorite
         }
     }
 

@@ -1,14 +1,19 @@
 package com.example.stephen.projectfour;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.stephen.projectfour.data.Contract;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterViewHolder> {
 
@@ -22,15 +27,14 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
     public ArrayList<String> mRecipeNames;
     public ArrayList<String> mRecipeServings;
 
+    private List<String> mData;
+
 
     //get stuff on list from Main Activity
     public mCardAdapter(@NonNull Context context,
-                        mAdapterOnClickHandler clickHandler,
-                        ArrayList<String> recipeNames, ArrayList<String> servings) {
+                        mAdapterOnClickHandler clickHandler) {
         mContext = context;
         mClickHandler = clickHandler;
-        mRecipeNames = recipeNames;
-        mRecipeServings = servings;
     }
 
     //when view holder is created, inflate the views
@@ -46,14 +50,13 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
     //bind data to view holder
     @Override
     public void onBindViewHolder(mAdapterViewHolder holder, int position) {
-        holder.recipeNameTextView.setText(mRecipeNames.get(position));
-        holder.recipeServingsTextView.setText(mRecipeServings.get(position));
+        holder.recipeNameTextView.setText(mData.get(position));
     }
 
     //How many? The size of the output_list.
     @Override
     public int getItemCount() {
-        return mRecipeNames.size();
+        return  mData.size();
     }
 
     //override getItemViewType (from S11.02)
@@ -61,6 +64,25 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
     public int getItemViewType(int position) {
         int returnType = VIEW_TYPE_RECIPE;
         return returnType;
+    }
+
+    // TODO (6) create swap cursor method to reset the data
+    void swapCursor(Cursor data) {
+        // Move through the cursor and extract the movie poster urls.
+        List<String> movie_posters = new ArrayList<>();
+        String previous_recipe_name = "";
+        for (int i = 0; i < data.getCount(); i++) {
+            data.moveToPosition(i);
+            String recipe_name = data.getString(data.getColumnIndex(
+                    Contract.listEntry.COLUMN_RECIPE_NAME));
+            if (!previous_recipe_name.equals(recipe_name)) {
+                movie_posters.add(recipe_name);
+            }
+            previous_recipe_name = recipe_name;
+        }
+        mData = movie_posters;
+        Log.d("LOG", "mData from mCardAdapter" + mData.toString());
+        notifyDataSetChanged();
     }
 
     //set up clicks
@@ -73,13 +95,11 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
             View.OnClickListener {
         //initialize views
         public final TextView recipeNameTextView;
-        public final TextView recipeServingsTextView;
 
         //super the views so that they can be bound - set click listener too
         mAdapterViewHolder(View view) {
             super(view);
             recipeNameTextView = (TextView) view.findViewById(R.id.recipe_card_recipe_name_text_view);
-            recipeServingsTextView = (TextView) view.findViewById(R.id.recipe_card_servings_text_view);
             itemView.setOnClickListener(this);
         }
 

@@ -44,8 +44,10 @@ public class ItemDetailFragment extends Fragment implements
     public static final String ARG_ITEM = "item_test";
     public static final String ARG_INDEX = "item_index";
     public static final String ARG_INGREDIENTS = "item_ingredients";
+    public static final String ARG_RECIPE_NAME = "item_name";
     public String mData;
     public int mIndex;
+    public String mRecipeName;
     public String mIngredients;
     private SimpleExoPlayer mExoPlayer;
     private SimpleExoPlayerView mPlayerView;
@@ -63,6 +65,7 @@ public class ItemDetailFragment extends Fragment implements
         mData = getArguments().getString(ARG_ITEM);
         mIndex = getArguments().getInt(ARG_INDEX) - 1;
         mIngredients = getArguments().getString(ARG_INGREDIENTS);
+        mRecipeName = getArguments().getString(ARG_RECIPE_NAME);
     }
 
 
@@ -166,10 +169,8 @@ public class ItemDetailFragment extends Fragment implements
     @Override
     public void onClick(View v) {
         Log.d("LOG", "asdf widget button"+mIngredients);
-
-
         // recipe ingredients widget
-        String ingredients = mIngredients;
+        String ingredients = mRecipeName + "\n" + mIngredients;
         Context context = getActivity();
         Toast.makeText(context, "Ingredients added to widget", Toast.LENGTH_SHORT).show();
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
