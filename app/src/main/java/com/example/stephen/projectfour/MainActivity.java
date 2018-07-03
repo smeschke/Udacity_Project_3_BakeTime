@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements
 
         // code for recycler view
         mList = findViewById(R.id.my_recycler_view);
-        //mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mLayoutManager = new GridLayoutManager(this, 2);
         mList.setLayoutManager(mLayoutManager);
         mAdapter = new mCardAdapter(MainActivity.this, MainActivity.this);
@@ -156,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
             // Return the results to the onPostExecute method
-            //Log.d("LOG", "asdf " + fetchResults);
             return fetchResults;
         }
 
@@ -323,14 +321,12 @@ public class MainActivity extends AppCompatActivity implements
                     Contract.listEntry.COLUMN_RECIPE_SERVINGS));
             String recipeImg = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_RECIPE_IMAGE_URL));
-
             String ingredientName = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_INGREDIENT_NAME));
             String ingredientQuantity = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_INGREDIENT_QUANTITY));
             String ingredientMeasure = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_INGREDIENT_MEASURE));
-
             String stepThumb = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_STEP_THUMBNAIL_URL));
             String stepShortDiscription = cursor.getString(cursor.getColumnIndex(

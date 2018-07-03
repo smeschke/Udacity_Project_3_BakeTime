@@ -1,17 +1,21 @@
 package com.example.stephen.projectfour;
 
+import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +36,7 @@ import com.google.android.exoplayer2.util.Util;
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a {@link ItemListActivity}
- * in two-pane mode (on tablets) or a {@link ItemDetailActivity}
+ * in two-pane mode (on tablets) or a {@link StepDetailActivity}
  * on handsets.
  */
 public class ItemDetailFragment extends Fragment implements
@@ -68,29 +72,29 @@ public class ItemDetailFragment extends Fragment implements
         mRecipeName = getArguments().getString(ARG_RECIPE_NAME);
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         if (mIndex == 0) {
-
-            View rootView = inflater.inflate(R.layout.item_detail_index_zero, container, false);
+            View rootView = inflater.inflate(R.layout.step_detail_ingredients, container, false);
             mPlayerView = rootView.findViewById(R.id.playerViewRecipe);
             // Load the question mark as the background image until the user answers the question.
-            mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
-                    (getResources(), R.drawable.question_mark));
+            mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.question_mark));
             // Initialize the player.
             initializePlayer(Uri.parse("broken"));
-            String[] string_list = mData.split("42069");
-            String text = string_list[0] + "\n\n" + string_list[1];
-            ((TextView) rootView.findViewById(R.id.item_detail_recipe)).setText(text);
-
+            // There is no video for the ingredients, so hide that view by making the height zero.
+            mPlayerView.getLayoutParams().height = 0;
+            // Set the text views
+            ((TextView) rootView.findViewById(R.id.item_detail_recipe)).setText(mIngredients);
+            ((TextView) rootView.findViewById(R.id.item_detail_recipe_title)).setText(mRecipeName);
+            // Set button click listener
             Button button = (Button) rootView.findViewById(R.id.addButton);
             button.setOnClickListener(this);
+            Log.d("LOG", "asdf onCreateView of Fragment "+ mRecipeName);
             return rootView;
         } else {
-            View rootView = inflater.inflate(R.layout.item_detail, container, false);
+            View rootView = inflater.inflate(R.layout.step_detail_step, container, false);
 
             String text = "";
             String videoUri = "broken";
@@ -113,6 +117,8 @@ public class ItemDetailFragment extends Fragment implements
             // Initialize the player.
             initializePlayer(Uri.parse(videoUri));
             ((TextView) rootView.findViewById(R.id.item_detail)).setText(text);
+
+
             return rootView;
         }
     }
@@ -137,7 +143,6 @@ public class ItemDetailFragment extends Fragment implements
             MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
                     getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
             mExoPlayer.prepare(mediaSource);
-            mExoPlayer.setPlayWhenReady(true);
         }
     }
 

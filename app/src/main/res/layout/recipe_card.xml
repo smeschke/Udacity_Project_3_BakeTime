@@ -1,4 +1,5 @@
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_view"
     android:layout_width="100dp"
@@ -7,11 +8,19 @@
     android:layout_margin="12dp"
     card_view:cardCornerRadius="12dp">
 
+    <ImageView
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/recipe_card_image_view"
+        android:src="@drawable/ic_launcher_background"/>
+
     <TextView
         android:id="@+id/recipe_card_recipe_name_text_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="16dp"
         android:textAlignment="center" />
+
+
 
 </android.support.v7.widget.CardView>

@@ -1,12 +1,11 @@
 package com.example.stephen.projectfour;
 
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -15,23 +14,9 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RemoteViews;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.stephen.projectfour.dummy.DummyContent;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +25,7 @@ import java.util.List;
  * An activity representing a list of Items. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link ItemDetailActivity} representing
+ * lead to a {@link StepDetailActivity} representing
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
@@ -56,7 +41,7 @@ public class ItemListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_item_list);
+        setContentView(R.layout.activity_steps_list);
 
 
         if (findViewById(R.id.item_detail_container) != null) {
@@ -78,6 +63,28 @@ public class ItemListActivity extends AppCompatActivity {
         View recyclerView = findViewById(R.id.item_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
+
+        if (savedInstanceState==null && mTwoPane){
+            /*
+            *  For these conditions to be met, a user has clicked on a recipe for the first time.
+            *  Instead of showing a master list on the left, and an empty detail fragment
+            *  on the right, it is better to show the recipe name and ingredients in the fragment.
+            * */
+            ItemDetailFragment fragment = new ItemDetailFragment();
+            Bundle arguments = new Bundle();
+            String servings = mOutputList.get(0).split("42069")[1];
+            String recipe_name = mOutputList.get(0).split("42069")[0];
+            String ingredients = mOutputList.get(1);
+            arguments.putInt(ItemDetailFragment.ARG_INDEX, 1);
+            arguments.putString(ItemDetailFragment.ARG_ITEM, "test");
+            arguments.putString(ItemDetailFragment.ARG_INGREDIENTS, ingredients);
+            arguments.putString(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name + " -- " + servings);
+            fragment.setArguments(arguments);
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction()
+                    .add(R.id.item_detail_container, fragment)
+                    .commit();
+        }
     }
 
     @Override
@@ -125,7 +132,7 @@ public class ItemListActivity extends AppCompatActivity {
                             .commit();
                 } else {
                     Context context = view.getContext();
-                    Intent intent = new Intent(context, ItemDetailActivity.class);
+                    Intent intent = new Intent(context, StepDetailActivity.class);
                     intent.putExtra(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
                     intent.putExtra(ItemDetailFragment.ARG_INDEX, index);
                     intent.putExtra(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
@@ -152,9 +159,9 @@ public class ItemListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
+            if (position>0) position += 1;
 
             String text = split_string(mOutputList.get(position), "42069")[0];
-            if (position == 1) text = "Ingredients";
             holder.mContentView.setText(text);
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(mOnClickListener);
@@ -162,7 +169,7 @@ public class ItemListActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return mOutputList.size();
+            return mOutputList.size()-1;
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {

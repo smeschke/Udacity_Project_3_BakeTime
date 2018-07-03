@@ -29,7 +29,7 @@
                 android:value="com.example.stephen.projectfour.MainActivity" />
         </activity>
         <activity
-            android:name=".ItemDetailActivity"
+            android:name=".StepDetailActivity"
             android:label="@string/title_item_detail"
             android:parentActivityName=".ItemListActivity"
             android:theme="@style/AppTheme.NoActionBar">
