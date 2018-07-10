@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements
         SharedPreferences settings = getApplicationContext().
                 getSharedPreferences(LOG_KEY, SETTINGS_MODE);
         SharedPreferences.Editor editor = settings.edit();
-        // Check if the DB has been fetched from the TMDB API
+        // Check if the recipe data has been fetched from tOpher website
         boolean dbHasBeenQueried = settings.getBoolean(DB_HAS_BEEN_QUERIED_KEY, false);
 
         // If connected, query the DB (only do this once)
@@ -78,9 +79,20 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText(this, "no connectyivitiy", Toast.LENGTH_LONG).show();
         }
 
+        // Calculate the number of columns for the gridview
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        float width = displayMetrics.widthPixels/displayMetrics.scaledDensity;
+        int cols = 1;
+        while (width>400){
+            cols += 1;
+            width -= 400;
+        }
+        Log.d("LOG", "asdf MainActivity on create display width: " + width+ "  - num cols: "+ cols);
+
         // code for recycler view
         mList = findViewById(R.id.my_recycler_view);
-        mLayoutManager = new GridLayoutManager(this, 2);
+        mLayoutManager = new GridLayoutManager(this, cols);
         mList.setLayoutManager(mLayoutManager);
         mAdapter = new mCardAdapter(MainActivity.this, MainActivity.this);
         mList.setAdapter(mAdapter);
@@ -176,9 +188,7 @@ public class MainActivity extends AppCompatActivity implements
                 List<String> ingredientQuantities = JsonUtils.parseIngredientQuantities(recipes, idx);
                 List<String> ingredientMeasures = JsonUtils.parseIngredientMeasures(recipes, idx);
                 List<String> attributes = JsonUtils.parseAttributes(recipes, idx);
-
                 insert_recipes(attributes, ingredientNames, ingredientQuantities, ingredientMeasures, stepIds, stepShortDescriptions, stepVerboseDescription, stepVideo, stepThumbs);
-
                 recipeNames.add(attributes.get(0));
                 recipeServings.add("Servings: " + attributes.get(2));
                 Log.d("LOG", "asdf onPostExecute recipe names" + attributes.get(0));
@@ -197,7 +207,6 @@ public class MainActivity extends AppCompatActivity implements
         String id = attributes.get(1);
         String servings = attributes.get(2);
         String image_url = attributes.get(3);
-
 
         // Iterate though the steps and put then in the db
         for (int step_index = 0; step_index < stepIds.size(); step_index++) {
@@ -234,10 +243,10 @@ public class MainActivity extends AppCompatActivity implements
             cv.put(Contract.listEntry.COLUMN_STEP_ID, stepId);
 
             cv.put(Contract.listEntry.COLUMN_IS_INGREDIENT, "false");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_ID, "test");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_MEASURE, "test");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_QUANTITY, "test");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_NAME, "test");
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_ID, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_MEASURE, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_QUANTITY, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_NAME, "exoplayer_landscape");
 
             // Insert the content values via a ContentResolver
             // Is the a database operation on the main thread? Sorry Layla.
@@ -271,11 +280,11 @@ public class MainActivity extends AppCompatActivity implements
             cv.put(Contract.listEntry.COLUMN_RECIPE_SERVINGS, servings);
 
             cv.put(Contract.listEntry.COLUMN_IS_STEP, "false");
-            cv.put(Contract.listEntry.COLUMN_STEP_THUMBNAIL_URL, "test");
-            cv.put(Contract.listEntry.COLUMN_STEP_SHORT_DESCRIPTION, "test");
-            cv.put(Contract.listEntry.COLUMN_STEP_VERBOSE_DESCRIPTION, "test");
-            cv.put(Contract.listEntry.COLUMN_STEP_VIDEO_URL, "test");
-            cv.put(Contract.listEntry.COLUMN_STEP_ID, "test");
+            cv.put(Contract.listEntry.COLUMN_STEP_THUMBNAIL_URL, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_STEP_SHORT_DESCRIPTION, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_STEP_VERBOSE_DESCRIPTION, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_STEP_VIDEO_URL, "exoplayer_landscape");
+            cv.put(Contract.listEntry.COLUMN_STEP_ID, "exoplayer_landscape");
 
             cv.put(Contract.listEntry.COLUMN_IS_INGREDIENT, "true");
             cv.put(Contract.listEntry.COLUMN_INGREDIENT_ID, ingredientId);
@@ -336,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements
             String stepVideoUrl = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_STEP_VIDEO_URL));
 
-            if (!ingredientName.equals("test") && recipeId.equals(position)) {
+            if (!ingredientName.equals("exoplayer_landscape") && recipeId.equals(position)) {
                 if (!recipeAttributesWritten) {
                     outputList.add(recipeName + "42069" + "Servings: " + recipeServings);
                     recipeAttributesWritten = true;
@@ -345,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements
                         + " " + ingredientMeasure);
             }
             String stepOutput = "";
-            if (!stepShortDiscription.equals("test") && recipeId.equals(position)) {
+            if (!stepShortDiscription.equals("exoplayer_landscape") && recipeId.equals(position)) {
                 stepOutput += stepShortDiscription + "42069"
                         + stepVerboseDescription + "42069"
                         + stepThumb + "42069"

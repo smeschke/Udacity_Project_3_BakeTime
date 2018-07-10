@@ -8,9 +8,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.stephen.projectfour.data.Contract;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +25,8 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
     private final Context mContext;
     //set up the click handler
     final private mAdapterOnClickHandler mClickHandler;
-    //create string for output list
-    public ArrayList<String> mRecipeNames;
-    public ArrayList<String> mRecipeServings;
-
     private List<String> mData;
+    private List<String> mImgUrlStrings;
 
 
     //get stuff on list from Main Activity
@@ -51,12 +50,17 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
     @Override
     public void onBindViewHolder(mAdapterViewHolder holder, int position) {
         holder.recipeNameTextView.setText(mData.get(position));
+        String img_url = mImgUrlStrings.get(position);
+        Picasso.with(mContext).load(img_url).error(R.drawable.missing).into(holder.recipeImageView);
     }
 
     //How many? The size of the output_list.
     @Override
     public int getItemCount() {
-        return  mData.size();
+        int mDataSize;
+        try { mDataSize = mData.size(); }
+        catch (Exception e) { mDataSize = 0; }
+        return  mDataSize;
     }
 
     //override getItemViewType (from S11.02)
@@ -70,18 +74,23 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
     void swapCursor(Cursor data) {
         // Move through the cursor and extract the movie poster urls.
         List<String> movie_posters = new ArrayList<>();
+        List<String> image_urls = new ArrayList<>();
         String previous_recipe_name = "";
         for (int i = 0; i < data.getCount(); i++) {
             data.moveToPosition(i);
             String recipe_name = data.getString(data.getColumnIndex(
                     Contract.listEntry.COLUMN_RECIPE_NAME));
+            String img_url = data.getString(data.getColumnIndex(
+                    Contract.listEntry.COLUMN_RECIPE_IMAGE_URL));
             if (!previous_recipe_name.equals(recipe_name)) {
                 movie_posters.add(recipe_name);
+                image_urls.add(img_url);
             }
             previous_recipe_name = recipe_name;
         }
         mData = movie_posters;
-        Log.d("LOG", "mData from mCardAdapter" + mData.toString());
+        mImgUrlStrings = image_urls;
+        Log.d("LOG", "asdf mData from mCardAdapter" + mData.toString());
         notifyDataSetChanged();
     }
 
@@ -95,10 +104,12 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
             View.OnClickListener {
         //initialize views
         public final TextView recipeNameTextView;
+        public final ImageView recipeImageView;
 
         //super the views so that they can be bound - set click listener too
         mAdapterViewHolder(View view) {
             super(view);
+            recipeImageView = (ImageView) view.findViewById(R.id.recipe_card_image_view);
             recipeNameTextView = (TextView) view.findViewById(R.id.recipe_card_recipe_name_text_view);
             itemView.setOnClickListener(this);
         }

@@ -14,9 +14,11 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.stephen.projectfour.dummy.DummyContent;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,36 +74,14 @@ public class ItemListActivity extends AppCompatActivity {
             * */
             ItemDetailFragment fragment = new ItemDetailFragment();
             Bundle arguments = new Bundle();
-            String servings = mOutputList.get(0).split("42069")[1];
-            String recipe_name = mOutputList.get(0).split("42069")[0];
-            String ingredients = mOutputList.get(1);
             arguments.putInt(ItemDetailFragment.ARG_INDEX, 1);
-            arguments.putString(ItemDetailFragment.ARG_ITEM, "test");
-            arguments.putString(ItemDetailFragment.ARG_INGREDIENTS, ingredients);
-            arguments.putString(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name + " -- " + servings);
+            arguments.putStringArrayList(ItemDetailFragment.ARG_OUTPUT, mOutputList);
             fragment.setArguments(arguments);
             FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction()
                     .add(R.id.item_detail_container, fragment)
                     .commit();
         }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -117,14 +97,14 @@ public class ItemListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 DummyContent.DummyItem item = (DummyContent.DummyItem) view.getTag();
+                Log.d("LOG", "asdf view.getTag(): " + view.getTag().toString());
                 int index = Integer.parseInt(item.id);
-                String recipe_name = mOutputList.get(0).split("42069")[0];
+                Log.d("LOG", "asdf view.getTag() int: " + index);
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
                     arguments.putInt(ItemDetailFragment.ARG_INDEX, index);
-                    arguments.putString(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
-                    arguments.putString(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
-                    arguments.putString(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name);
+                    arguments.putString(ItemDetailFragment.ARG_PANE, "2");
+                    arguments.putStringArrayList(ItemDetailFragment.ARG_OUTPUT, mOutputList);
                     ItemDetailFragment fragment = new ItemDetailFragment();
                     fragment.setArguments(arguments);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -133,10 +113,9 @@ public class ItemListActivity extends AppCompatActivity {
                 } else {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, StepDetailActivity.class);
-                    intent.putExtra(ItemDetailFragment.ARG_ITEM, mOutputList.get(index-1));
                     intent.putExtra(ItemDetailFragment.ARG_INDEX, index);
-                    intent.putExtra(ItemDetailFragment.ARG_INGREDIENTS, mOutputList.get(1));
-                    intent.putExtra(ItemDetailFragment.ARG_RECIPE_NAME, recipe_name);
+                    intent.putExtra(ItemDetailFragment.ARG_PANE, "1");
+                    intent.putExtra(ItemDetailFragment.ARG_OUTPUT, mOutputList);
                     context.startActivity(intent);
                 }
             }
@@ -160,9 +139,13 @@ public class ItemListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             if (position>0) position += 1;
-
             String text = split_string(mOutputList.get(position), "42069")[0];
+            String img_url = "";
+            try{img_url = split_string(mOutputList.get(position), "42069")[2];}
+            catch (Exception e){img_url = "broken";}
+            Log.d("LOG", "img url" + img_url);
             holder.mContentView.setText(text);
+            Picasso.with(getApplicationContext()).load(img_url).error(R.drawable.missing).into(holder.mContentImageView);
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(mOnClickListener);
         }
@@ -174,9 +157,11 @@ public class ItemListActivity extends AppCompatActivity {
 
         class ViewHolder extends RecyclerView.ViewHolder {
             final TextView mContentView;
+            final ImageView mContentImageView;
             ViewHolder(View view) {
                 super(view);
                 mContentView = (TextView) view.findViewById(R.id.content);
+                mContentImageView = (ImageView) view.findViewById(R.id.list_item_content_imageview);
             }
         }
     }
