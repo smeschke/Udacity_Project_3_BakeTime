@@ -17,7 +17,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements
         SharedPreferences.Editor editor = settings.edit();
         // Check if the recipe data has been fetched from tOpher website
         boolean dbHasBeenQueried = settings.getBoolean(DB_HAS_BEEN_QUERIED_KEY, false);
-
+        
         // If connected, query the DB (only do this once)
         if (!dbHasBeenQueried && is_connected()) {
             Log.d("LOG", "asdf connection and no db query, time for a new fetch task");
@@ -82,13 +81,13 @@ public class MainActivity extends AppCompatActivity implements
         // Calculate the number of columns for the gridview
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        float width = displayMetrics.widthPixels/displayMetrics.scaledDensity;
+        float width = displayMetrics.widthPixels / displayMetrics.scaledDensity;
         int cols = 1;
-        while (width>400){
+        while (width > 400) {
             cols += 1;
             width -= 400;
         }
-        Log.d("LOG", "asdf MainActivity on create display width: " + width+ "  - num cols: "+ cols);
+        Log.d("LOG", "asdf MainActivity on create display width: " + width + "  - num cols: " + cols);
 
         // code for recycler view
         mList = findViewById(R.id.my_recycler_view);
@@ -126,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements
                 null,
                 Contract.listEntry.COLUMN_TIMESTAMP);
     }
+
     // When loading is finished, swap in the new data
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
@@ -134,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements
         mAdapter.swapCursor(data);
         Log.d("LOG", "asdf cursor get Count (should be 81): " + Integer.toString(mCursor.getCount()));
     }
+
     // I don't think the loader ever gets reset.
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
@@ -384,4 +385,3 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 }
-
