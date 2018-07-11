@@ -2,29 +2,29 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_view"
     android:layout_width="match_parent"
-    android:layout_height="150dp"
+    android:layout_height="@dimen/card_size"
     android:layout_gravity="center"
-    android:layout_margin="30dp"
-    card_view:cardCornerRadius="19dp">
+    android:layout_margin="@dimen/large_padding"
+    card_view:cardCornerRadius="@dimen/roundover">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="14dp"
+        android:layout_margin="@dimen/medium_padding"
         android:orientation="vertical">
 
         <ImageView
             android:id="@+id/recipe_card_image_view"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="@dimen/recipe_card_image_view_height"
             android:src="@drawable/ic_launcher_background" />
 
         <TextView
             android:id="@+id/recipe_card_recipe_name_text_view"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="16dp"
-            android:textSize="22dp"
+            android:layout_height="@dimen/recipe_card_height"
+            android:layout_marginTop="@dimen/medium_padding"
+            android:textSize="@dimen/headline"
             android:textStyle="bold"
             android:textAlignment="center" />
 
