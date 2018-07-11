@@ -101,7 +101,8 @@ public class JsonUtils {
                 //get the json for the individual string
                 String step = recipeSteps.getString(idx);
                 Gson gson = new Gson();
-                String videoUrl = gson.fromJson(step, RecipeStep.class).videoUrl;
+                String videoUrl = gson.fromJson(step, RecipeStep.class).videoURL;
+                Log.d("LOG", "asdf videoURL fromJSON UTILS" + videoUrl);
                 if (videoUrl == null) videoUrl = "broken";
                 recipeStepVideoUrls.add(videoUrl);
             }
@@ -127,7 +128,7 @@ public class JsonUtils {
                 //get the json for the individual string
                 String step = recipeSteps.getString(idx);
                 Gson gson = new Gson();
-                String thumb = gson.fromJson(step, RecipeStep.class).thumbnailUrl;
+                String thumb = gson.fromJson(step, RecipeStep.class).thumbnailURL;
                 if (thumb == null) thumb = "broken";
                 recipeStepThumbnails.add(thumb);
             }

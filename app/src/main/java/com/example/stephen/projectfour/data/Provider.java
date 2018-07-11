@@ -14,6 +14,7 @@ import static com.example.stephen.projectfour.data.Contract.listEntry.TABLE_NAME
 
 /*
 This is based on S09.05 - The Sunshine database lesson.
+This exactly the same as the Provider I used in the last project
 */
 
 // Extend ContentProvider

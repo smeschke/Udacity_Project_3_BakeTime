@@ -33,9 +33,9 @@ public class Contract {
         public static final String COLUMN_STEP_THUMBNAIL_URL = "step_thumbnail_url";
 
         public static final String COLUMN_IS_INGREDIENT = "is_ingredient";
-        public static final String COLUMN_INGREDIENT_ID = "movie_released";
-        public static final String COLUMN_INGREDIENT_QUANTITY = "movie_reviews";
-        public static final String COLUMN_INGREDIENT_MEASURE = "poster_path";
-        public static final String COLUMN_INGREDIENT_NAME = "favorite";
+        public static final String COLUMN_INGREDIENT_ID = "ingredient_id";
+        public static final String COLUMN_INGREDIENT_QUANTITY = "quantity";
+        public static final String COLUMN_INGREDIENT_MEASURE = "measure";
+        public static final String COLUMN_INGREDIENT_NAME = "ingredient_name";
     }
 }

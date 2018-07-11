@@ -19,7 +19,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.example.stephen.projectfour.data.Contract;
@@ -38,44 +37,52 @@ public class MainActivity extends AppCompatActivity implements
     public mCardAdapter mAdapter;
     public RecyclerView mList;
     public final String LOG_KEY = "log";
-    public final String DB_HAS_BEEN_QUERIED_KEY = "dbQueryKey";
+    public final String DATA_HAS_BEEN_DOWNLAODED = "dbQueryKey";
     public final int SETTINGS_MODE = 0;
     public final int LOADER_ID = 42;
     public Cursor mCursor;
     private RecyclerView.LayoutManager mLayoutManager;
+    public String DELIMITER;
+    public final String INTENT_KEY = "output";
+    public final int COLUMN_SIZE = 400;
+    public final String NOT_USED = "value_not_used";
+    public final String IS_TRUE = "true";
+    public final String BROKEN = "broken";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Log.d("LOG", "asdf OnCreate");
-
+        // Get the delimiter from strings
+        DELIMITER = getResources().getString(R.string.delimiter);
+        /*
+         *   INFORMATION FLOW:
+         *   1. The first time the app is run the JSON data is download, parsed,  and saved in a DB.
+         *   2. On subsequent loads, the recipe data is quered from the DB.
+         * */
         URL url = null;
         try {
             url = new URL("https://d17h27t6h515a5.cloudfront.net/topher/2017/May/59121517_baking/baking.json");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-
         // Get access to the preferences
-        SharedPreferences settings = getApplicationContext().
-                getSharedPreferences(LOG_KEY, SETTINGS_MODE);
+        SharedPreferences settings = getApplicationContext().getSharedPreferences(LOG_KEY, SETTINGS_MODE);
         SharedPreferences.Editor editor = settings.edit();
-        // Check if the recipe data has been fetched from tOpher website
-        boolean dbHasBeenQueried = settings.getBoolean(DB_HAS_BEEN_QUERIED_KEY, false);
-        
+        // Check if the recipe data has been fetched from the website
+        boolean dataAcquired = settings.getBoolean(DATA_HAS_BEEN_DOWNLAODED, false);
         // If connected, query the DB (only do this once)
-        if (!dbHasBeenQueried && is_connected()) {
-            Log.d("LOG", "asdf connection and no db query, time for a new fetch task");
-            editor.putBoolean(DB_HAS_BEEN_QUERIED_KEY, true).commit();
+        if (!dataAcquired && is_connected()) {
+            // Update the shared preferences 
+            editor.putBoolean(DATA_HAS_BEEN_DOWNLAODED, true).commit();
             delete_all(); // Clear the db
             new fetch().execute(url);
         }
         // If there is no connection, tell the user to connect
         if (!is_connected()) {
-            Toast.makeText(this, "no connectyivitiy", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getResources().getString(R.string.no_connection),
+                    Toast.LENGTH_LONG).show();
         }
 
         // Calculate the number of columns for the gridview
@@ -83,21 +90,17 @@ public class MainActivity extends AppCompatActivity implements
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         float width = displayMetrics.widthPixels / displayMetrics.scaledDensity;
         int cols = 1;
-        while (width > 400) {
+        while (width > COLUMN_SIZE) {
             cols += 1;
-            width -= 400;
+            width -= COLUMN_SIZE;
         }
-        Log.d("LOG", "asdf MainActivity on create display width: " + width + "  - num cols: " + cols);
-
-        // code for recycler view
+        // Code for recycler view
         mList = findViewById(R.id.my_recycler_view);
         mLayoutManager = new GridLayoutManager(this, cols);
         mList.setLayoutManager(mLayoutManager);
         mAdapter = new mCardAdapter(MainActivity.this, MainActivity.this);
         mList.setAdapter(mAdapter);
         getSupportLoaderManager().initLoader(LOADER_ID, null, this);
-        Log.d("LOG", "asdf about to getSupportLoaderManager");
-
     }
 
     // Is there an internet connection?
@@ -117,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
-        Log.d("LOG", "asdf loader onCreateLoader123467128934");
         return new CursorLoader(this,
                 Contract.listEntry.CONTENT_URI,
                 null,
@@ -129,10 +131,8 @@ public class MainActivity extends AppCompatActivity implements
     // When loading is finished, swap in the new data
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
-        Log.d("LOG", "asdf onLoadFinished");
         mCursor = data;
         mAdapter.swapCursor(data);
-        Log.d("LOG", "asdf cursor get Count (should be 81): " + Integer.toString(mCursor.getCount()));
     }
 
     // I don't think the loader ever gets reset.
@@ -142,25 +142,21 @@ public class MainActivity extends AppCompatActivity implements
     }
     /////////////////////////////////// END CURSOR LOADER METHODS //////////////////////////////////
 
-    //on user clicks, send to training
+    // On user clicks, send to training
     @Override
     public void onClick(int index) {
-        Toast.makeText(this, Integer.toString(index), Toast.LENGTH_SHORT).show();
         Intent toDetail = new Intent(this, ItemListActivity.class);
-        // Add an output String Array list extra that has all the recipes information
-        // This keeps all the DB calls on in the MainActivity
-        toDetail.putStringArrayListExtra("output", getOutputString(Integer.toString(index + 1)));
+        toDetail.putStringArrayListExtra(INTENT_KEY, getOutputString(Integer.toString(index + 1)));
         startActivity(toDetail);
     }
 
-    // Fetch recipe data from internet
+    ///////////////////////////////// START RECIPE DATA FETCH TASK /////////////////////////////////
     class fetch extends AsyncTask<URL, Void, String>
 
     {
         // Do in background gets the json recipe data from internet
         @Override
         protected String doInBackground(URL... urls) {
-            Log.d("LOG", "asdf doInBackground of AsyncFetchTask");
             String fetchResults = null;
             try {
                 fetchResults = NetworkUtils.getResponseFromHttpUrl(urls[0]);
@@ -174,11 +170,7 @@ public class MainActivity extends AppCompatActivity implements
         // On post execute task
         @Override
         protected void onPostExecute(String recipes) {
-            // parse out the json
-            // Iterate through each recipe and add it to the DB
-            Log.d("LOG", "asdf onPostExecute of async task");
-            ArrayList<String> recipeNames = new ArrayList<>();
-            ArrayList<String> recipeServings = new ArrayList<>();
+            // Iterate though the list of recipes and add them to the DB
             for (int idx = 0; idx < 4; idx++) {
                 List<String> stepIds = JsonUtils.parseStepID(recipes, idx);
                 List<String> stepShortDescriptions = JsonUtils.parseStepDescription(recipes, idx);
@@ -190,137 +182,118 @@ public class MainActivity extends AppCompatActivity implements
                 List<String> ingredientMeasures = JsonUtils.parseIngredientMeasures(recipes, idx);
                 List<String> attributes = JsonUtils.parseAttributes(recipes, idx);
                 insert_recipes(attributes, ingredientNames, ingredientQuantities, ingredientMeasures, stepIds, stepShortDescriptions, stepVerboseDescription, stepVideo, stepThumbs);
-                recipeNames.add(attributes.get(0));
-                recipeServings.add("Servings: " + attributes.get(2));
-                Log.d("LOG", "asdf onPostExecute recipe names" + attributes.get(0));
             }
         }
     }
+    ///////////////////////////////// END RECIPE DATA FETCH TASK ///////////////////////////////////
 
+    ////////////////////////////// START INSERT RECIPE INTO DB TASK ////////////////////////////////
     private void insert_recipes(List<String> attributes, List<String> ingredientNames,
                                 List<String> ingredientQuantities, List<String> ingredientMeasures,
                                 List<String> stepIds, List<String> stepShortDescriptions,
                                 List<String> stepVerboseDescriptions, List<String> stepVideo,
                                 List<String> stepThumbs) {
-
-        // get attributes
+        // Get recipes name, id, servings, and image url
         String name = attributes.get(0);
         String id = attributes.get(1);
         String servings = attributes.get(2);
         String image_url = attributes.get(3);
-
-        // Iterate though the steps and put then in the db
+        // Iterate though the steps and put them in the db
         for (int step_index = 0; step_index < stepIds.size(); step_index++) {
-
             String stepThumbnailUrl = stepThumbs.get(step_index);
             String stepShortDescription = stepShortDescriptions.get(step_index);
             String stepVerboseDescription = stepVerboseDescriptions.get(step_index);
             String stepVideoUrl = stepVideo.get(step_index);
             String stepId = stepIds.get(step_index);
-
-            // check for and fix null values
-            if (name.equals("")) name = "broken";
-            if (id.equals("")) id = "broken";
-            if (image_url.equals("")) image_url = "broken";
-            if (servings.equals("")) servings = "broken";
-
-            if (stepThumbnailUrl.equals("")) stepThumbnailUrl = "broken";
-            if (stepShortDescription.equals("")) stepShortDescription = "broken";
-            if (stepVerboseDescription.equals("")) stepShortDescription = "broken";
-            if (stepVideoUrl.equals("")) stepVideoUrl = "broken";
-            if (stepId.equals("")) stepId = "broken";
-
+            // Check for and fix null values
+            if (name.equals("")) name = BROKEN;
+            if (id.equals("")) id = BROKEN;
+            if (image_url.equals("")) image_url = BROKEN;
+            if (servings.equals("")) servings = BROKEN;
+            if (stepThumbnailUrl.equals("")) stepThumbnailUrl = BROKEN;
+            if (stepShortDescription.equals("")) stepShortDescription = BROKEN;
+            if (stepVerboseDescription.equals("")) stepShortDescription = BROKEN;
+            if (stepVideoUrl.equals("")) stepVideoUrl = BROKEN;
+            if (stepId.equals("")) stepId = BROKEN;
             ContentValues cv = new ContentValues();
             cv.put(Contract.listEntry.COLUMN_RECIPE_NAME, name);
             cv.put(Contract.listEntry.COLUMN_RECIPE_ID, id);
             cv.put(Contract.listEntry.COLUMN_RECIPE_IMAGE_URL, image_url);
             cv.put(Contract.listEntry.COLUMN_RECIPE_SERVINGS, servings);
-
-            cv.put(Contract.listEntry.COLUMN_IS_STEP, "true");
+            cv.put(Contract.listEntry.COLUMN_IS_STEP, IS_TRUE);
             cv.put(Contract.listEntry.COLUMN_STEP_THUMBNAIL_URL, stepThumbnailUrl);
             cv.put(Contract.listEntry.COLUMN_STEP_SHORT_DESCRIPTION, stepShortDescription);
             cv.put(Contract.listEntry.COLUMN_STEP_VERBOSE_DESCRIPTION, stepVerboseDescription);
             cv.put(Contract.listEntry.COLUMN_STEP_VIDEO_URL, stepVideoUrl);
             cv.put(Contract.listEntry.COLUMN_STEP_ID, stepId);
-
-            cv.put(Contract.listEntry.COLUMN_IS_INGREDIENT, "false");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_ID, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_MEASURE, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_QUANTITY, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_INGREDIENT_NAME, "exoplayer_landscape");
-
+            cv.put(Contract.listEntry.COLUMN_IS_INGREDIENT, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_ID, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_MEASURE, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_QUANTITY, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_INGREDIENT_NAME, NOT_USED);
             // Insert the content values via a ContentResolver
-            // Is the a database operation on the main thread? Sorry Layla.
             getContentResolver().insert(Contract.listEntry.CONTENT_URI, cv);
-            // Tell the user a movie has been saved as favorite
         }
         // Iterate though the ingredients and put then in the db
         for (int idx = 0; idx < ingredientNames.size(); idx++) {
-
-
             String ingredientId = Integer.toString(idx);
             String ingredientMeasure = ingredientMeasures.get(idx);
             String ingredientQuantity = ingredientQuantities.get(idx);
             String ingredientName = ingredientNames.get(idx);
-
-            // check for and fix null values
-            if (name.equals("")) name = "broken";
-            if (id.equals("")) id = "broken";
-            if (image_url.equals("")) image_url = "broken";
-            if (servings.equals("")) servings = "broken";
-
-            if (ingredientId.equals("")) ingredientId = "broken";
-            if (ingredientMeasure.equals("")) ingredientMeasure = "broken";
-            if (ingredientName.equals("")) ingredientName = "broken";
-            if (ingredientQuantity.equals("")) ingredientQuantity = "broken";
-
+            // Check for and fix null values
+            if (name.equals("")) name = BROKEN;
+            if (id.equals("")) id = BROKEN;
+            if (image_url.equals("")) image_url = BROKEN;
+            if (servings.equals("")) servings = BROKEN;
+            if (ingredientId.equals("")) ingredientId = BROKEN;
+            if (ingredientMeasure.equals("")) ingredientMeasure = BROKEN;
+            if (ingredientName.equals("")) ingredientName = BROKEN;
+            if (ingredientQuantity.equals("")) ingredientQuantity = BROKEN;
             ContentValues cv = new ContentValues();
             cv.put(Contract.listEntry.COLUMN_RECIPE_NAME, name);
             cv.put(Contract.listEntry.COLUMN_RECIPE_ID, id);
             cv.put(Contract.listEntry.COLUMN_RECIPE_IMAGE_URL, image_url);
             cv.put(Contract.listEntry.COLUMN_RECIPE_SERVINGS, servings);
-
-            cv.put(Contract.listEntry.COLUMN_IS_STEP, "false");
-            cv.put(Contract.listEntry.COLUMN_STEP_THUMBNAIL_URL, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_STEP_SHORT_DESCRIPTION, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_STEP_VERBOSE_DESCRIPTION, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_STEP_VIDEO_URL, "exoplayer_landscape");
-            cv.put(Contract.listEntry.COLUMN_STEP_ID, "exoplayer_landscape");
-
-            cv.put(Contract.listEntry.COLUMN_IS_INGREDIENT, "true");
+            cv.put(Contract.listEntry.COLUMN_IS_STEP, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_STEP_THUMBNAIL_URL, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_STEP_SHORT_DESCRIPTION, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_STEP_VERBOSE_DESCRIPTION, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_STEP_VIDEO_URL, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_STEP_ID, NOT_USED);
+            cv.put(Contract.listEntry.COLUMN_IS_INGREDIENT, IS_TRUE);
             cv.put(Contract.listEntry.COLUMN_INGREDIENT_ID, ingredientId);
             cv.put(Contract.listEntry.COLUMN_INGREDIENT_MEASURE, ingredientMeasure);
             cv.put(Contract.listEntry.COLUMN_INGREDIENT_QUANTITY, ingredientQuantity);
             cv.put(Contract.listEntry.COLUMN_INGREDIENT_NAME, ingredientName);
-
             // Insert the content values via a ContentResolver
-            // Is the a database operation on the main thread? Sorry Layla.
             getContentResolver().insert(Contract.listEntry.CONTENT_URI, cv);
         }
     }
+    /////////////////////////////// END INSERT RECIPE INTO DB TASK ////////////////////////////////
 
 
-    // Returns a Cursor for all the saved favorite movies in the database
+    // Returns a Cursor for all the saved recipes in the database
     private Cursor getAllRecipes() {
         return getContentResolver().query(Contract.listEntry.CONTENT_URI,
                 null, null, null, Contract.listEntry.COLUMN_TIMESTAMP);
     }
 
-    /* This function takes the database and returns one recipe that is nicely formatted.
+    /*
+     *  This function takes the database and returns one recipe that is nicely formatted.
      *  @param index - the recipe id
      *  @return output - a list of the output to be sent to the detail activity
      */
     public ArrayList<String> getOutputString(String position) {
-        // make a list for ingredients and steps
+        // Make a list for ingredients and steps
         ArrayList<String> stepsList = new ArrayList<>();
         ArrayList<String> ingredientsList = new ArrayList<>();
         ArrayList<String> outputList = new ArrayList<>();
         boolean recipeAttributesWritten = false;
         Cursor cursor = getAllRecipes();
-        Log.d("LOG", "asdf, cursor size: " + Integer.toString(cursor.getCount()));
-
-        // iterate through the db, and if it is an ingredient in this recipe,
-        // add it to the ingredients list
+        /*
+         *  Iterate through the db, and if it is an ingredient in this recipe,
+         *  add it to the ingredients list.
+         */
         for (int idx = 0; idx < cursor.getCount(); idx++) {
             cursor.moveToPosition(idx);
             String recipeId = cursor.getString(cursor.getColumnIndex(
@@ -329,8 +302,6 @@ public class MainActivity extends AppCompatActivity implements
                     Contract.listEntry.COLUMN_RECIPE_NAME));
             String recipeServings = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_RECIPE_SERVINGS));
-            String recipeImg = cursor.getString(cursor.getColumnIndex(
-                    Contract.listEntry.COLUMN_RECIPE_IMAGE_URL));
             String ingredientName = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_INGREDIENT_NAME));
             String ingredientQuantity = cursor.getString(cursor.getColumnIndex(
@@ -345,43 +316,49 @@ public class MainActivity extends AppCompatActivity implements
                     Contract.listEntry.COLUMN_STEP_VERBOSE_DESCRIPTION));
             String stepVideoUrl = cursor.getString(cursor.getColumnIndex(
                     Contract.listEntry.COLUMN_STEP_VIDEO_URL));
-
-            if (!ingredientName.equals("exoplayer_landscape") && recipeId.equals(position)) {
+            // If (1) this is an ingredient and (2) the ingredient belongs to this recipe
+            if (!ingredientName.equals(NOT_USED) && recipeId.equals(position)) {
+                // Add the # servings to the list (only once)
                 if (!recipeAttributesWritten) {
-                    outputList.add(recipeName + "42069" + "Servings: " + recipeServings);
+                    outputList.add(recipeName + DELIMITER +
+                            getResources().getString(R.string.servings)+ recipeServings);
                     recipeAttributesWritten = true;
                 }
+                // Add the ingredients to the ingredientsList
                 ingredientsList.add(ingredientName + " " + ingredientQuantity
                         + " " + ingredientMeasure);
             }
             String stepOutput = "";
-            if (!stepShortDiscription.equals("exoplayer_landscape") && recipeId.equals(position)) {
-                stepOutput += stepShortDiscription + "42069"
-                        + stepVerboseDescription + "42069"
-                        + stepThumb + "42069"
+            // If (1) this is a step, and (2) the step belongs to this recipe
+            if (!stepShortDiscription.equals(NOT_USED) && recipeId.equals(position)) {
+                stepOutput += stepShortDiscription + DELIMITER
+                        + stepVerboseDescription + DELIMITER
+                        + stepThumb + DELIMITER
                         + stepVideoUrl;
+                // Add the step to the steps list
                 stepsList.add(stepOutput);
             }
         }
+        // Make the list of ingredients into a nice string with a buttleted list
         String ingredientsString = "";
         for (int idx = 0; idx < ingredientsList.size(); idx++) {
             ingredientsString += "\u2022 " + ingredientsList.get(idx) + "\n";
         }
+        // Add the ingredients to the output list
         outputList.add(ingredientsString);
+        // Add the steps to the output list
         for (int idx = 0; idx < stepsList.size(); idx++) {
             outputList.add(stepsList.get(idx));
         }
+        // Return a list that contains all the information about a recipe
         return outputList;
     }
 
-    // Delete the movies that are going to be updated
+    // Delete everything in the database
     public void delete_all() {
         // Build uri with the movie json that needs to be deleted
         Uri uri = Contract.listEntry.CONTENT_URI;
         uri = uri.buildUpon().appendPath("1").build();
-        // This goes to the top part of the 'delete' method in the Provider class,
-        // because the paths is len <3.
         getContentResolver().delete(uri, null, null);
     }
-
 }

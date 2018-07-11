@@ -19,7 +19,6 @@ import java.util.List;
 
 public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterViewHolder> {
 
-    //constant ID's for the View type for level or trick (S11.02)
     private static final int VIEW_TYPE_RECIPE = 0;
     //get context
     private final Context mContext;
@@ -90,7 +89,6 @@ public class mCardAdapter extends RecyclerView.Adapter<mCardAdapter.mAdapterView
         }
         mData = movie_posters;
         mImgUrlStrings = image_urls;
-        Log.d("LOG", "asdf mData from mCardAdapter" + mData.toString());
         notifyDataSetChanged();
     }
 

@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * This activity was created by selecting new activity --> master/detail flow.
+ *
  * An activity representing a list of Items. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
@@ -39,12 +41,17 @@ public class ItemListActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
     ArrayList<String> mOutputList;
+    public static final String BROKEN = "broken";
+    public final String INTENT_KEY = "output";
+    public static final String SINGLE_PANE = "1";
+    public static final String TWO_PANE = "2";
+    public String DELIMITER;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_steps_list);
-
+        DELIMITER = getResources().getString(R.string.delimiter);
 
         if (findViewById(R.id.item_detail_container) != null) {
             // The detail container view will be present only in the
@@ -53,19 +60,11 @@ public class ItemListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
-
-        mOutputList = getIntent().getExtras().getStringArrayList("output");
-        //Log.d("LOG", "asdf"+mOutputList.toString());
-        Log.d("LOG", "asdf" + mOutputList.size());
-        try {
-            Log.d("LOG", "asdf" + mOutputList.get(0));
-        } catch (Exception e) {
-            Log.d("LOG", "asdf read error");
-        }
+        // Get the recipe data from the intent
+        mOutputList = getIntent().getExtras().getStringArrayList(INTENT_KEY);
         View recyclerView = findViewById(R.id.item_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
-
         if (savedInstanceState==null && mTwoPane){
             /*
             *  For these conditions to be met, a user has clicked on a recipe for the first time.
@@ -97,13 +96,11 @@ public class ItemListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 DummyContent.DummyItem item = (DummyContent.DummyItem) view.getTag();
-                Log.d("LOG", "asdf view.getTag(): " + view.getTag().toString());
                 int index = Integer.parseInt(item.id);
-                Log.d("LOG", "asdf view.getTag() int: " + index);
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
                     arguments.putInt(ItemDetailFragment.ARG_INDEX, index);
-                    arguments.putString(ItemDetailFragment.ARG_PANE, "2");
+                    arguments.putString(ItemDetailFragment.ARG_PANE, TWO_PANE);
                     arguments.putStringArrayList(ItemDetailFragment.ARG_OUTPUT, mOutputList);
                     ItemDetailFragment fragment = new ItemDetailFragment();
                     fragment.setArguments(arguments);
@@ -114,13 +111,12 @@ public class ItemListActivity extends AppCompatActivity {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, StepDetailActivity.class);
                     intent.putExtra(ItemDetailFragment.ARG_INDEX, index);
-                    intent.putExtra(ItemDetailFragment.ARG_PANE, "1");
+                    intent.putExtra(ItemDetailFragment.ARG_PANE, SINGLE_PANE);
                     intent.putExtra(ItemDetailFragment.ARG_OUTPUT, mOutputList);
                     context.startActivity(intent);
                 }
             }
         };
-
         SimpleItemRecyclerViewAdapter(ItemListActivity parent,
                                       List<DummyContent.DummyItem> items,
                                       boolean twoPane) {
@@ -139,11 +135,10 @@ public class ItemListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             if (position>0) position += 1;
-            String text = split_string(mOutputList.get(position), "42069")[0];
+            String text = split_string(mOutputList.get(position), DELIMITER)[0];
             String img_url = "";
-            try{img_url = split_string(mOutputList.get(position), "42069")[2];}
-            catch (Exception e){img_url = "broken";}
-            Log.d("LOG", "img url" + img_url);
+            try{img_url = split_string(mOutputList.get(position), DELIMITER)[2];}
+            catch (Exception e){img_url = BROKEN;}
             holder.mContentView.setText(text);
             Picasso.with(getApplicationContext()).load(img_url).error(R.drawable.missing).into(holder.mContentImageView);
             holder.itemView.setTag(mValues.get(position));

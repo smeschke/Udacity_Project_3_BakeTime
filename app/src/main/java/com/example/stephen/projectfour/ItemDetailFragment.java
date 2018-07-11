@@ -48,6 +48,9 @@ public class ItemDetailFragment extends Fragment implements
     public static final String ARG_OUTPUT = "output"; // Data for steps and ingredients...
     public static final String MY_ID = "my_id";
     public static final String MY_PLAYER_POSITION = "position";
+    public final String BROKEN = "broken";
+    public static final String SINGLE_PANE = "1";
+    public static final String TWO_PANE = "2";
     public int mIndex;
     public String mRecipeName;
     public String mIngredients;
@@ -55,8 +58,8 @@ public class ItemDetailFragment extends Fragment implements
     public String mServings;
     private SimpleExoPlayer mExoPlayer;
     private PlayerView mPlayerView;
-
     public long mPlayerPosition;
+    public String DELIMITER;
 
     ArrayList<String> mOutputList;
 
@@ -79,29 +82,28 @@ public class ItemDetailFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        DELIMITER = getResources().getString(R.string.delimiter);
         mIndex = getArguments().getInt(ARG_INDEX) - 1;
         mPaneLayout = getArguments().getString(ARG_PANE);
         mOutputList = getArguments().getStringArrayList(ARG_OUTPUT);
         mIngredients = mOutputList.get(1);
-        mServings = mOutputList.get(0).split("42069")[1];
-        mRecipeName = mOutputList.get(0).split("42069")[0];
+        mServings = mOutputList.get(0).split(DELIMITER)[1];
+        mRecipeName = mOutputList.get(0).split(DELIMITER)[0];
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        // If the user has navigated to a different step in the detail activity,
-        // get that step from the savedInstanceState
+        /*
+        * If the user has navigated to a different step in the detail activity,
+        * get that step from the savedInstanceState
+        * */
         if (savedInstanceState != null) {
-            Log.d("LOG", "asdf savedInstanceState is not null in onCreateVew");
             mIndex = savedInstanceState.getInt(MY_ID);
             mPlayerPosition = savedInstanceState.getLong(MY_PLAYER_POSITION);
         } else {
-            Log.d("LOG", "asdf savedInstanceState is null in onCreateView");
             mPlayerPosition = 0;
         }
-
         // Depending on which step the user is on, a different view is inflated.
         if (mIndex == 0) {
             // The first step shows the recipe name, # of servings,
@@ -111,7 +113,7 @@ public class ItemDetailFragment extends Fragment implements
             // Load the question mark as the background image until the user answers the question.
             mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.question_mark));
             // Initialize the player.
-            initializePlayer(Uri.parse("broken"));
+            initializePlayer(Uri.parse(BROKEN));
             // There is no video for the ingredients, so hide that view by making the height zero.
             mPlayerView.getLayoutParams().height = 0;
             // Set the text views
@@ -120,39 +122,27 @@ public class ItemDetailFragment extends Fragment implements
             // Set button click listener
             Button button = (Button) rootView.findViewById(R.id.addButton);
             button.setOnClickListener(this);
-            Log.d("LOG", "asdf onCreateView of Fragment " + mRecipeName);
             return rootView;
         }
         // If the user is past the first step, these other view will be inflated.
         else {
             View rootView;
-            String text = mOutputList.get(mIndex).split("42069")[1];
-            String videoUri = mOutputList.get(mIndex).split("42069")[3];
+            String text = mOutputList.get(mIndex).split(DELIMITER)[1];
+            String videoUri = mOutputList.get(mIndex).split(DELIMITER)[3];
             // If (App is running on phone && Phone is in landscape orientation){
-            if (mPaneLayout.equals("1") &&
+            if (mPaneLayout.equals(SINGLE_PANE) &&
                     getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-
                 hideSystemUI();
-
-                //rootView = inflater.inflate(R.layout.fragment_step_detail, container, false);
                 rootView = inflater.inflate(R.layout.exoplayer_fullscreen, container, false);
                 mPlayerView = rootView.findViewById(R.id.playerView);
-
                 // Load the question mark as the background image until the user answers the question.
                 mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
                         (getResources(), R.drawable.question_mark));
                 initializePlayer(Uri.parse(videoUri));
-
-                // To get here, the app is running on a phone that is in landscape,
-                // so, the video needs to be fullscreen.
-                Log.d("LOG", "asdf NEED FULL SCREEN VIDEO HERE");
-
-
             }
             // If (App is running on phone && Phone is in portrait orientation){
             else {
                 rootView = inflater.inflate(R.layout.fragment_step_detail, container, false);
-                //showSystemUI();
                 mPlayerView = rootView.findViewById(R.id.playerView);
                 // Load the question mark as the background image until the user answers the question.
                 mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
@@ -168,27 +158,21 @@ public class ItemDetailFragment extends Fragment implements
                 descriptionTextView.setText(text);
 
                 // Hide the navigation buttons on tablets
-                if (mPaneLayout.equals("2")){
+                if (mPaneLayout.equals(TWO_PANE)){
                     nextButton.setVisibility(View.INVISIBLE);
                     previousButton.setVisibility(View.INVISIBLE);
                 }
                 // Hide the next button if this is the last step.
-                if (mIndex + 1 == mOutputList.size()) {
-                    Log.d("LOG", "asdf Last step, hiding the next button. mIndex: " + mIndex + " mOutoutList.size(): " + mOutputList.size());
-                    nextButton.setVisibility(View.INVISIBLE);
-                }
+                if (mIndex + 1 == mOutputList.size()) nextButton.setVisibility(View.INVISIBLE);
                 // Hide the previous button if this is the first step.
-                if (mIndex == 2) {
-                    Log.d("LOG", "asdf First step, heading the previous button. mIndex: " + mIndex + " mOutoutList.size(): " + mOutputList.size());
-                    previousButton.setVisibility(View.INVISIBLE);
-                }
+                if (mIndex == 2) previousButton.setVisibility(View.INVISIBLE);
             }
             return rootView;
         }
     }
 
     /*
-     * Override savedInstanceState() and save mIndex.
+     * Override savedInstanceState() and save mIndex and the player position.
      *
      * This is necessary because a user may navigate to a different step within the
      * detail activity on when running the app in portrait orientation on a phone.
@@ -221,9 +205,6 @@ public class ItemDetailFragment extends Fragment implements
 
     /**
      * Initialize ExoPlayer.
-     * <p>
-     * This is from the Udacity Exoplayer Lesson by Nikita
-     * <p>
      * and https://codelabs.developers.google.com/codelabs/exoplayer-intro/#2
      *
      * @param mediaUri The URI of the sample to play.
@@ -237,7 +218,6 @@ public class ItemDetailFragment extends Fragment implements
                     new DefaultLoadControl());
             mPlayerView.setPlayer(mExoPlayer);
             // Prepare the MediaSource.
-            String userAgent = Util.getUserAgent(getContext(), "ClassicalMusicQuiz");
             MediaSource mediaSource = buildMediaSource(mediaUri);
             mExoPlayer.prepare(mediaSource);
             mExoPlayer.seekTo(mPlayerPosition);
@@ -257,12 +237,9 @@ public class ItemDetailFragment extends Fragment implements
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
-        Log.d("LOG", "asdf Release exoPlayer.");
     }
 
-    /**
-     * Release ExoPlayer.
-     */
+    // Release ExoPlayer
     private void releasePlayer() {
         mExoPlayer.stop();
         mExoPlayer.release();
@@ -278,38 +255,42 @@ public class ItemDetailFragment extends Fragment implements
      * */
     @Override
     public void onClick(View v) {
-        String button_type = v.toString().split("app:id/")[1];
-        Log.d("LOG", "asdf widget button " + button_type);
-        if (button_type.equals("addButton}")) {
-            Log.d("LOG", "asdf update widget");
-            // recipe ingredients widget
-            String ingredients = mRecipeName + "\n" + mIngredients;
+        // Get the button_type
+        int button_type = v.getId();
+        // Add ingredients to the widget
+        if (button_type==R.id.addButton){
+            // Get a nicely formatted string of the recipe name and ingredients
+            String ingredients = mRecipeName + "\n\n" + mIngredients;
             Context context = getActivity();
-            Toast.makeText(context, "Ingredients added to widget", Toast.LENGTH_SHORT).show();
+            // Get app widget manager
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            // Create a remote view
             RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.recipe_widget);
             ComponentName thisWidget = new ComponentName(context, recipe_widget.class);
+            // Set the widget text and update the widget
             remoteViews.setTextViewText(R.id.appwidget_text, ingredients);
             appWidgetManager.updateAppWidget(thisWidget, remoteViews);
+            // Tell the user that the ingredients have been added to the widget
+            Toast.makeText(context, getResources().getString(R.string.widget_success),
+                    Toast.LENGTH_SHORT).show();
         }
         /*
+         *  Handling navigation between recipe steps:
+         *
          *  Going to either the previous or next step requires that the text view
          *  showing the step description and the video have to be replaced with the
          *  correct content.
          *
          *  First, the mIndex variable is updated.
-         *  Next, the text view is reset
+         *  Next, the text view is reset.
          *  Finally, if the user is on the first step, the 'previous' button is hidden.
          *      -->  if the user is on the last step, the 'next' button is hidden.
          *
          * */
-        // Go to the previous step
-        if (button_type.equals("previousStep}")) {
+        if (button_type==R.id.previousStep){
             mIndex -= 1;
-            Log.d("LOG", "asdf previousStep button, mIndex: " + mIndex);
-            String text = mOutputList.get(mIndex).split("42069")[1];
-            String videoUri = mOutputList.get(mIndex).split("42069")[3];
-
+            String text = mOutputList.get(mIndex).split(DELIMITER)[1];
+            String videoUri = mOutputList.get(mIndex).split(DELIMITER)[3];
             View view = getView();
             ((TextView) view.findViewById(R.id.item_detail)).setText(text);
             releasePlayer();
@@ -319,21 +300,17 @@ public class ItemDetailFragment extends Fragment implements
                 Button previous = (Button) view.findViewById(R.id.previousStep);
                 previous.setVisibility(View.INVISIBLE);
             }
-
         }
-        // Go to the next step
-        if (button_type.equals("nextStep}")) {
+        if (button_type==R.id.nextStep){
             mIndex += 1;
-            Log.d("LOG", "asdf nextStep button, mIndex:  " + mIndex + " mOutoutList.size(): " + mOutputList.size());
-            String text = mOutputList.get(mIndex).split("42069")[1];
-            String videoUri = mOutputList.get(mIndex).split("42069")[3];
+            String text = mOutputList.get(mIndex).split(DELIMITER)[1];
+            String videoUri = mOutputList.get(mIndex).split(DELIMITER)[3];
             releasePlayer();
             initializePlayer(Uri.parse(videoUri));
             View view = getView();
             ((TextView) view.findViewById(R.id.item_detail)).setText(text);
             // Hide the next button if the user is on the last step
             if (mIndex + 1 == mOutputList.size()) {
-                Log.d("LOG", "asdf Last step, hiding the next button. mIndex: " + mIndex + " mOutoutList.size(): " + mOutputList.size());
                 Button nextButton = (Button) view.findViewById(R.id.nextStep);
                 nextButton.setVisibility(View.INVISIBLE);
             }

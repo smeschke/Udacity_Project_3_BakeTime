@@ -2,6 +2,10 @@
     <string name="app_name">ProjectFour</string>
     <string name="title_item_list">Ingredients and Steps</string>
     <string name="title_item_detail">Individual Step</string>
-    <string name="appwidget_text">EXAMPLE</string>
+    <string name="appwidget_text">Add ingredients in the app!</string>
     <string name="add_widget">Add widget</string>
+    <string name="servings">Servings: </string>
+    <string name="no_connection">Please Connect to Download Recipes</string>
+    <string name="delimiter">my_delimiter1234</string>
+    <string name="widget_success">Recipe ingredients added to widget.</string>
 </resources>
