@@ -1,18 +1,16 @@
 package com.example.stephen.projectfour;
 
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.NavUtils;
+import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.WindowManager;
+import android.widget.Toast;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -23,10 +21,14 @@ import java.util.ArrayList;
  */
 public class StepDetailActivity extends AppCompatActivity {
 
+    public final String INTENT_KEY = "output";
+    public ArrayList<String> mOutputList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_step_detail);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // SavedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -42,8 +44,6 @@ public class StepDetailActivity extends AppCompatActivity {
             // using a fragment transaction.
             int index = getIntent().getExtras().getInt(ItemDetailFragment.ARG_INDEX);
             String pane = getIntent().getExtras().getString(ItemDetailFragment.ARG_PANE);
-
-            ArrayList<String> mOutputList;
             mOutputList = getIntent().getExtras().getStringArrayList(ItemDetailFragment.ARG_OUTPUT);
             Bundle arguments = new Bundle();
             arguments.putInt(ItemDetailFragment.ARG_INDEX, index);
@@ -57,20 +57,14 @@ public class StepDetailActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            NavUtils.navigateUpTo(this, new Intent(this,
-                    ItemListActivity.class));
-            return true;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // Send the user back to the list of steps.
+                finish();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

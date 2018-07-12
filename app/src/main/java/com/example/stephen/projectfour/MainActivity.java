@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -19,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.stephen.projectfour.data.Contract;
@@ -81,8 +83,21 @@ public class MainActivity extends AppCompatActivity implements
         }
         // If there is no connection, tell the user to connect
         if (!is_connected()) {
-            Toast.makeText(this, getResources().getString(R.string.no_connection),
-                    Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, getResources().getString(R.string.no_connection),Toast.LENGTH_LONG).show();
+            // Reviewer Suggestion: use snackbar instead of toast.
+            // https://stackoverflow.com/questions/30978457/how-to-show-snackbar-when-activity-starts
+            View parentLayout = findViewById(android.R.id.content);
+            String text = getResources().getString(R.string.no_connection);
+            Snackbar.make(parentLayout, text, Snackbar.LENGTH_LONG)
+                    .setAction("CLOSE", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                        }
+                    })
+                    .setActionTextColor(getResources().getColor(android.R.color.holo_red_light ))
+                    .setDuration(72727)
+                    .show();
         }
 
         // Calculate the number of columns for the gridview
@@ -150,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(toDetail);
     }
 
+    // Reviewer suggested moving this into a separate class, but I couldn't figure out how to make that work.
     ///////////////////////////////// START RECIPE DATA FETCH TASK /////////////////////////////////
     class fetch extends AsyncTask<URL, Void, String>
 

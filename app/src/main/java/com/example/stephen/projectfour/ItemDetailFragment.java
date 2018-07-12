@@ -48,6 +48,7 @@ public class ItemDetailFragment extends Fragment implements
     public static final String ARG_OUTPUT = "output"; // Data for steps and ingredients...
     public static final String MY_ID = "my_id";
     public static final String MY_PLAYER_POSITION = "position";
+    private static final String KEY_AUTO_PLAY = "key_auto_play";
     public final String BROKEN = "broken";
     public static final String SINGLE_PANE = "1";
     public static final String TWO_PANE = "2";
@@ -60,6 +61,7 @@ public class ItemDetailFragment extends Fragment implements
     private PlayerView mPlayerView;
     public long mPlayerPosition;
     public String DELIMITER;
+    private boolean mStartAutoPlay;
 
     ArrayList<String> mOutputList;
 
@@ -101,9 +103,13 @@ public class ItemDetailFragment extends Fragment implements
         if (savedInstanceState != null) {
             mIndex = savedInstanceState.getInt(MY_ID);
             mPlayerPosition = savedInstanceState.getLong(MY_PLAYER_POSITION);
+            mStartAutoPlay = savedInstanceState.getBoolean(KEY_AUTO_PLAY);
         } else {
             mPlayerPosition = 0;
+            mStartAutoPlay = false;
         }
+        Log.d("LOG", "asdf mStartAudoPlay in onCreateView: " + mStartAutoPlay);
+
         // Depending on which step the user is on, a different view is inflated.
         if (mIndex == 0) {
             // The first step shows the recipe name, # of servings,
@@ -129,25 +135,32 @@ public class ItemDetailFragment extends Fragment implements
             View rootView;
             String text = mOutputList.get(mIndex).split(DELIMITER)[1];
             String videoUri = mOutputList.get(mIndex).split(DELIMITER)[3];
-            // If (App is running on phone && Phone is in landscape orientation){
+            // If (App is running on phone && phone is in landscape orientation){
             if (mPaneLayout.equals(SINGLE_PANE) &&
                     getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 hideSystemUI();
+
+                Log.d("LOG", "asdf fullscreen  "+ mStartAutoPlay);
                 rootView = inflater.inflate(R.layout.exoplayer_fullscreen, container, false);
                 mPlayerView = rootView.findViewById(R.id.playerView);
                 // Load the question mark as the background image until the user answers the question.
                 mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
                         (getResources(), R.drawable.question_mark));
                 initializePlayer(Uri.parse(videoUri));
+                // Restore the Exoplayer's start/pause state
+                mExoPlayer.setPlayWhenReady(mStartAutoPlay);
             }
             // If (App is running on phone && Phone is in portrait orientation){
             else {
+                Log.d("LOG", "asdf portrait  "+ mStartAutoPlay);
                 rootView = inflater.inflate(R.layout.fragment_step_detail, container, false);
                 mPlayerView = rootView.findViewById(R.id.playerView);
                 // Load the question mark as the background image until the user answers the question.
                 mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
                         (getResources(), R.drawable.question_mark));
                 initializePlayer(Uri.parse(videoUri));
+                // Restore the Exoplayer's start/pause state
+                mExoPlayer.setPlayWhenReady(mStartAutoPlay);
                 TextView descriptionTextView = (TextView) rootView.findViewById(R.id.item_detail);
                 Button nextButton = (Button) rootView.findViewById(R.id.nextStep);
                 Button previousButton = (Button) rootView.findViewById(R.id.previousStep);
@@ -183,6 +196,8 @@ public class ItemDetailFragment extends Fragment implements
         savedInstanceState.putInt(MY_ID, mIndex);
         long position = mExoPlayer.getCurrentPosition();
         savedInstanceState.putLong(MY_PLAYER_POSITION, position);
+        savedInstanceState.putBoolean(KEY_AUTO_PLAY, mExoPlayer.getPlayWhenReady());
+        Log.d("LOG", "asdf onSaveinstancestate " + mExoPlayer.getPlayWhenReady());
     }
 
     // https://developer.android.com/training/system-ui/immersive
@@ -230,12 +245,10 @@ public class ItemDetailFragment extends Fragment implements
                 createMediaSource(uri);
     }
 
-    /**
-     * Release the player when the activity is destroyed.
-     */
+    // Review said: "release the Exoplayer in onPause or onStop"
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
         releasePlayer();
     }
 
@@ -289,6 +302,8 @@ public class ItemDetailFragment extends Fragment implements
          * */
         if (button_type==R.id.previousStep){
             mIndex -= 1;
+            mPlayerPosition = 0;
+            mStartAutoPlay = false;
             String text = mOutputList.get(mIndex).split(DELIMITER)[1];
             String videoUri = mOutputList.get(mIndex).split(DELIMITER)[3];
             View view = getView();
@@ -303,6 +318,8 @@ public class ItemDetailFragment extends Fragment implements
         }
         if (button_type==R.id.nextStep){
             mIndex += 1;
+            mPlayerPosition = 0;
+            mStartAutoPlay = false;
             String text = mOutputList.get(mIndex).split(DELIMITER)[1];
             String videoUri = mOutputList.get(mIndex).split(DELIMITER)[3];
             releasePlayer();

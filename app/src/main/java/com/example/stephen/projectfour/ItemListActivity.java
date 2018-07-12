@@ -46,10 +46,12 @@ public class ItemListActivity extends AppCompatActivity {
     public static final String SINGLE_PANE = "1";
     public static final String TWO_PANE = "2";
     public String DELIMITER;
+    private static final String KEY_OUTPUT_STRING = "key_output_string";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.activity_steps_list);
         DELIMITER = getResources().getString(R.string.delimiter);
 
@@ -60,8 +62,8 @@ public class ItemListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
-        // Get the recipe data from the intent
         mOutputList = getIntent().getExtras().getStringArrayList(INTENT_KEY);
+
         View recyclerView = findViewById(R.id.item_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
@@ -81,6 +83,12 @@ public class ItemListActivity extends AppCompatActivity {
                     .add(R.id.item_detail_container, fragment)
                     .commit();
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putStringArrayList(KEY_OUTPUT_STRING, mOutputList);
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -173,4 +181,14 @@ public class ItemListActivity extends AppCompatActivity {
         return output;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Send the user back to the recipe cards
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

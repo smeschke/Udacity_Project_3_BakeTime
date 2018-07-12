@@ -23,7 +23,7 @@
             android:name=".ItemListActivity"
             android:label="@string/title_item_list"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.stephen.projectfour.MainActivity" />
@@ -32,7 +32,7 @@
             android:name=".StepDetailActivity"
             android:label="@string/title_item_detail"
             android:parentActivityName=".ItemListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.stephen.projectfour.ItemListActivity" />
